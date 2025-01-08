@@ -2,7 +2,7 @@ import "./App.css";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { getPosts, postUser } from "./utils/api";
 import { postResponseData } from "./utils/types";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 /**
  * 1.react query is like a wrapper that wraps your api request and it manages that
  * state
@@ -13,6 +13,12 @@ import { useState } from "react";
  * 1.useQuery is used for fetch req
  * 2.useMutation is used for post / patch etc since
  *    its modification of data hence named mutation
+ */
+
+/**
+ * methods to refetch data 
+ * 1. to use the refetch fn 
+ * 2. by invalidating the query key 
  */
 
 // assume its comming from the logged in user
@@ -27,6 +33,8 @@ function App() {
     data: postData,
     error: postError,
     isLoading: postLoading,
+    //can be used to  fetch the data again
+    refetch: refetchGetPosts,
   } = useQuery<postResponseData[]>({
     /* used to internally cache the data mapped by the query key, refetch etc */
     queryKey: ["getPosts"],
@@ -34,11 +42,18 @@ function App() {
     queryFn: getPosts,
   });
 
-  const { mutate: createPostMutation, isSuccess: createPostSuccess } =
+  const { mutate: createPostMutation, isSuccess: isCreatePostSuccess } =
     useMutation({
       mutationKey: ["postUsers"],
       mutationFn: postUser,
     });
+
+  useEffect(() => {
+    // fetching the data if a post req is success full
+    if (isCreatePostSuccess) {
+      refetchGetPosts();
+    }
+  }, [isCreatePostSuccess, refetchGetPosts]);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     // prevent the default behavior
