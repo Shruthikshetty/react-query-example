@@ -27,3 +27,16 @@ export interface Company {
   catchPhrase: string;
   bs: string;
 }
+
+export interface createUserRequestBody {
+  userId: string;
+  title: string;
+  body: string;
+}
+
+export interface postResponseData {
+  id: number;
+  title: string;
+  body: string;
+  userId: number;
+}

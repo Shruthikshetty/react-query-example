@@ -1,7 +1,8 @@
 import "./App.css";
-import { useQuery } from "@tanstack/react-query";
-import { getUsers } from "./utils/api";
-import { UerData } from "./utils/types";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { getPosts, postUser } from "./utils/api";
+import { postResponseData } from "./utils/types";
+import { useState } from "react";
 /**
  * 1.react query is like a wrapper that wraps your api request and it manages that
  * state
@@ -10,37 +11,85 @@ import { UerData } from "./utils/types";
 
 /**
  * 1.useQuery is used for fetch req
- * 2.mutation is used for post / patch etc since
+ * 2.useMutation is used for post / patch etc since
  *    its modification of data hence named mutation
  */
+
+// assume its comming from the logged in user
+const USER_ID = "964364";
+
+// main app component
 function App() {
+  const [title, setTitle] = useState("");
+  const [body, setBody] = useState("");
+  const [showposts, setShowPosts] = useState(false);
   const {
-    data: usersData,
-    error: usersError,
-    isLoading: usersLoading,
-  } = useQuery<UerData[]>({
+    data: postData,
+    error: postError,
+    isLoading: postLoading,
+  } = useQuery<postResponseData[]>({
     /* used to internally cache the data mapped by the query key, refetch etc */
-    queryKey: ["hetUsers"],
+    queryKey: ["getPosts"],
     /* a warpper to query call function */
-    queryFn: getUsers,
+    queryFn: getPosts,
   });
 
-  console.log();
+  const { mutate: createPostMutation, isSuccess: createPostSuccess } =
+    useMutation({
+      mutationKey: ["postUsers"],
+      mutationFn: postUser,
+    });
 
-  if (usersError && !usersLoading)
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    // prevent the default behavior
+    e.preventDefault();
+    // make the api call
+    createPostMutation({
+      title,
+      body,
+      userId: USER_ID,
+    });
+  };
+
+  if (postError && !postLoading)
     return <p>Error occured while fetchingdetails</p>;
-  if (usersLoading) return <p>Loading data</p>;
+  if (postLoading) return <p>Loading data</p>;
   return (
-    <div>
-      {usersData?.map((detail) => (
-        <div>
-          <p style={{ fontWeight: "bold" }}>{detail.username}</p>
-          <p>{detail.email}</p>
-          <p>{detail.address.city}</p>
-          <p>----------------------------</p>
-        </div>
-      ))}
-    </div>
+    <>
+      <form onSubmit={handleSubmit}>
+        <label htmlFor="title">Title</label>
+        <input
+          type="text"
+          name="title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+        <br />
+        <label htmlFor="body">Body</label>
+        <input
+          type="text"
+          name="body"
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+        />
+        <br />
+        <button>create user</button>
+      </form>
+      <br />
+      <button onClick={() => setShowPosts((s) => !s)}>
+        {!showposts ? "show post" : "hide post"}
+      </button>
+      <br />
+      {!!showposts &&
+        postData?.map((post) => (
+          <div key={post.id}>
+            <p>{post.userId}</p>
+            <h3>{post.title}</h3>
+            <p>{post.body}</p>
+            <p>--------------------------------------------</p>
+          </div>
+        ))}
+    </>
   );
 }
 
