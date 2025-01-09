@@ -1,5 +1,5 @@
 import "./App.css";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getPosts, postUser } from "./utils/api";
 import { postResponseData } from "./utils/types";
 import { useEffect, useState } from "react";
@@ -16,9 +16,9 @@ import { useEffect, useState } from "react";
  */
 
 /**
- * methods to refetch data 
- * 1. to use the refetch fn 
- * 2. by invalidating the query key 
+ * methods to refetch data
+ * 1. to use the refetch fn
+ * 2. by invalidating the query key
  */
 
 // assume its comming from the logged in user
@@ -29,6 +29,8 @@ function App() {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [showposts, setShowPosts] = useState(false);
+  // used to invalidate
+  const queryClient = useQueryClient();
   const {
     data: postData,
     error: postError,
@@ -51,9 +53,10 @@ function App() {
   useEffect(() => {
     // fetching the data if a post req is success full
     if (isCreatePostSuccess) {
-      refetchGetPosts();
+      // can also be done onSucess in useMutation
+      queryClient.invalidateQueries({ queryKey: ["getPosts"] });
     }
-  }, [isCreatePostSuccess, refetchGetPosts]);
+  }, [isCreatePostSuccess, queryClient]);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     // prevent the default behavior
